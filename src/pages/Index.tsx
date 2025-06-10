@@ -3,6 +3,14 @@ import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dashboard from '@/components/Dashboard';
 import ChatInbox from '@/components/ChatInbox';
+import Contacts from './Contacts';
+import Campaigns from './Campaigns';
+import Templates from './Templates';
+import PhoneNumbers from './PhoneNumbers';
+import Automation from './Automation';
+import Analytics from './Analytics';
+import Billing from './Billing';
+import Settings from './Settings';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -14,21 +22,21 @@ const Index = () => {
       case 'inbox':
         return <ChatInbox />;
       case 'contacts':
-        return <div className="p-6">Contacts Management Coming Soon</div>;
+        return <Contacts />;
       case 'campaigns':
-        return <div className="p-6">Campaign Management Coming Soon</div>;
+        return <Campaigns />;
       case 'templates':
-        return <div className="p-6">Template Management Coming Soon</div>;
+        return <Templates />;
       case 'phone':
-        return <div className="p-6">Phone Number Management Coming Soon</div>;
+        return <PhoneNumbers />;
       case 'automation':
-        return <div className="p-6">Automation & Chatbot Builder Coming Soon</div>;
+        return <Automation />;
       case 'analytics':
-        return <div className="p-6">Advanced Analytics Coming Soon</div>;
+        return <Analytics />;
       case 'billing':
-        return <div className="p-6">Billing & Subscription Management Coming Soon</div>;
+        return <Billing />;
       case 'settings':
-        return <div className="p-6">Settings Coming Soon</div>;
+        return <Settings />;
       default:
         return <Dashboard />;
     }
