@@ -5,46 +5,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, Edit, Trash2, MessageSquare, Phone, Mail, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, MessageSquare, Phone, Mail, Filter, Loader2 } from 'lucide-react';
+import { useContacts } from '@/hooks/useContacts';
+import AddContactDialog from '@/components/AddContactDialog';
 
 const Contacts = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const { contacts, loading, deleteContact } = useContacts();
 
-  const mockContacts = [
-    {
-      id: 1,
-      name: 'John Smith',
-      phone: '+1 234 567 8901',
-      email: 'john@example.com',
-      tags: ['Customer', 'VIP'],
-      lastMessage: '2 hours ago',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      phone: '+1 234 567 8902',
-      email: 'sarah@example.com',
-      tags: ['Lead', 'Hot'],
-      lastMessage: '1 day ago',
-      status: 'Active'
-    },
-    {
-      id: 3,
-      name: 'Mike Davis',
-      phone: '+1 234 567 8903',
-      email: 'mike@example.com',
-      tags: ['Customer'],
-      lastMessage: '3 days ago',
-      status: 'Inactive'
-    }
-  ];
-
-  const filteredContacts = mockContacts.filter(contact =>
+  const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.phone.includes(searchTerm) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase())
+    contact.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const stats = {
+    total: contacts.length,
+    active: contacts.filter(c => c.status === 'active').length,
+    newThisMonth: contacts.filter(c => {
+      const created = new Date(c.created_at);
+      const now = new Date();
+      return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+    }).length,
+    segments: new Set(contacts.flatMap(c => c.tags)).size
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -53,7 +46,7 @@ const Contacts = () => {
           <h1 className="text-3xl font-bold text-gradient">Contacts</h1>
           <p className="text-muted-foreground">Manage your WhatsApp contacts and customer information</p>
         </div>
-        <Button className="gradient-primary">
+        <Button className="gradient-primary" onClick={() => setShowAddDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Contact
         </Button>
@@ -67,7 +60,7 @@ const Contacts = () => {
                 <Phone className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">1,234</p>
+                <p className="text-2xl font-bold">{stats.total.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Total Contacts</p>
               </div>
             </div>
@@ -81,7 +74,7 @@ const Contacts = () => {
                 <MessageSquare className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">892</p>
+                <p className="text-2xl font-bold">{stats.active.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Active Contacts</p>
               </div>
             </div>
@@ -95,7 +88,7 @@ const Contacts = () => {
                 <Mail className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">156</p>
+                <p className="text-2xl font-bold">{stats.newThisMonth.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">New This Month</p>
               </div>
             </div>
@@ -109,7 +102,7 @@ const Contacts = () => {
                 <Filter className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">45</p>
+                <p className="text-2xl font-bold">{stats.segments}</p>
                 <p className="text-sm text-muted-foreground">Segments</p>
               </div>
             </div>
@@ -158,12 +151,14 @@ const Contacts = () => {
                   <TableCell>
                     <div>
                       <p className="font-medium">{contact.name}</p>
-                      <p className="text-sm text-muted-foreground">{contact.email}</p>
+                      {contact.email && (
+                        <p className="text-sm text-muted-foreground">{contact.email}</p>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>{contact.phone}</TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                       {contact.tags.map((tag) => (
                         <Badge key={tag} variant="secondary" className="text-xs">
                           {tag}
@@ -172,10 +167,13 @@ const Contacts = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {contact.lastMessage}
+                    {contact.last_message_at 
+                      ? new Date(contact.last_message_at).toLocaleDateString()
+                      : 'No messages'
+                    }
                   </TableCell>
                   <TableCell>
-                    <Badge variant={contact.status === 'Active' ? 'default' : 'secondary'}>
+                    <Badge variant={contact.status === 'active' ? 'default' : 'secondary'}>
                       {contact.status}
                     </Badge>
                   </TableCell>
@@ -187,7 +185,11 @@ const Contacts = () => {
                       <Button variant="ghost" size="sm">
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => deleteContact(contact.id)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -196,8 +198,21 @@ const Contacts = () => {
               ))}
             </TableBody>
           </Table>
+
+          {filteredContacts.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                {contacts.length === 0 ? 'No contacts yet. Add your first contact!' : 'No contacts match your search.'}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      <AddContactDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+      />
     </div>
   );
 };
