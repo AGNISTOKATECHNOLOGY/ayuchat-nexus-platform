@@ -8,13 +8,22 @@ import { Users, Shield, Settings, BarChart3, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { UserRole } from '@/hooks/useUserRole';
+
+interface UserWithRole {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  created_at: string;
+  user_roles: Array<{ role: UserRole }>;
+}
 
 const SuperAdminDashboard = () => {
   const { toast } = useToast();
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users'],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserWithRole[]> => {
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -26,7 +35,7 @@ const SuperAdminDashboard = () => {
         `);
 
       if (error) throw error;
-      return data;
+      return data as UserWithRole[];
     }
   });
 
@@ -49,7 +58,7 @@ const SuperAdminDashboard = () => {
     enabled: !!users
   });
 
-  const updateUserRole = async (userId: string, newRole: string) => {
+  const updateUserRole = async (userId: string, newRole: UserRole) => {
     try {
       const { error } = await supabase
         .from('user_roles')
@@ -164,49 +173,52 @@ const SuperAdminDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users?.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">
-                        {user.first_name} {user.last_name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{user.id}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      user.user_roles[0]?.role === 'super_admin' ? 'destructive' :
-                      user.user_roles[0]?.role === 'admin' ? 'default' : 'secondary'
-                    }>
-                      {user.user_roles[0]?.role || 'user'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateUserRole(user.id, 'admin')}
-                        disabled={user.user_roles[0]?.role === 'admin'}
-                      >
-                        Make Admin
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateUserRole(user.id, 'user')}
-                        disabled={user.user_roles[0]?.role === 'user'}
-                      >
-                        Make User
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {users?.map((user) => {
+                const userRole = user.user_roles[0]?.role || 'user';
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">
+                          {user.first_name} {user.last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{user.id}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        userRole === 'super_admin' ? 'destructive' :
+                        userRole === 'admin' ? 'default' : 'secondary'
+                      }>
+                        {userRole}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateUserRole(user.id, 'admin')}
+                          disabled={userRole === 'admin'}
+                        >
+                          Make Admin
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateUserRole(user.id, 'user')}
+                          disabled={userRole === 'user'}
+                        >
+                          Make User
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
 
