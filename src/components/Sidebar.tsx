@@ -1,73 +1,172 @@
 
 import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
+  LayoutDashboard, 
   MessageSquare, 
   Users, 
   Send, 
+  FileText, 
+  Phone, 
+  Bot, 
   BarChart3, 
+  CreditCard, 
   Settings, 
-  Phone,
-  FileText,
-  Zap,
-  CreditCard,
-  User,
-  Bell,
-  LogOut,
   Menu,
-  X
+  X,
+  Shield,
+  Crown
 } from 'lucide-react';
+import LogoutButton from './LogoutButton';
+import { UserRole } from '@/hooks/useUserRole';
 
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  userRole?: UserRole | null;
 }
 
-const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+const Sidebar = ({ activeSection, onSectionChange, userRole }: SidebarProps) => {
+  const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, badge: null },
-    { id: 'inbox', label: 'Inbox', icon: MessageSquare, badge: '12' },
-    { id: 'contacts', label: 'Contacts', icon: Users, badge: null },
-    { id: 'campaigns', label: 'Campaigns', icon: Send, badge: null },
-    { id: 'templates', label: 'Templates', icon: FileText, badge: '3' },
-    { id: 'phone', label: 'Phone Numbers', icon: Phone, badge: null },
-    { id: 'automation', label: 'Automation', icon: Zap, badge: 'NEW' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
-    { id: 'billing', label: 'Billing', icon: CreditCard, badge: null },
-    { id: 'settings', label: 'Settings', icon: Settings, badge: null }
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      roles: ['user', 'admin', 'super_admin']
+    },
+    {
+      id: 'inbox',
+      label: 'Chat Inbox',
+      icon: MessageSquare,
+      roles: ['admin', 'super_admin']
+    },
+    {
+      id: 'contacts',
+      label: 'Contacts',
+      icon: Users,
+      roles: ['admin', 'super_admin']
+    },
+    {
+      id: 'campaigns',
+      label: 'Campaigns',
+      icon: Send,
+      roles: ['admin', 'super_admin']
+    },
+    {
+      id: 'templates',
+      label: 'Templates',
+      icon: FileText,
+      roles: ['admin', 'super_admin']
+    },
+    {
+      id: 'phone',
+      label: 'Phone Numbers',
+      icon: Phone,
+      roles: ['admin', 'super_admin']
+    },
+    {
+      id: 'automation',
+      label: 'Automation',
+      icon: Bot,
+      roles: ['admin', 'super_admin']
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: BarChart3,
+      roles: ['admin', 'super_admin']
+    },
+    {
+      id: 'billing',
+      label: 'Billing',
+      icon: CreditCard,
+      roles: ['super_admin']
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+      roles: ['user', 'admin', 'super_admin']
+    }
   ];
 
-  const MenuItem = ({ item }: { item: any }) => (
-    <button
-      onClick={() => {
-        onSectionChange(item.id);
-        setMobileOpen(false);
-      }}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
-        activeSection === item.id
-          ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-      }`}
-    >
-      <item.icon className="w-5 h-5 flex-shrink-0" />
-      {!collapsed && (
-        <>
-          <span className="font-medium">{item.label}</span>
-          {item.badge && (
-            <Badge 
-              variant={item.badge === 'NEW' ? 'default' : 'secondary'} 
-              className="ml-auto text-xs px-1.5 py-0.5"
-            >
-              {item.badge}
-            </Badge>
-          )}
-        </>
-      )}
-    </button>
+  const filteredMenuItems = menuItems.filter(item => 
+    userRole && item.roles.includes(userRole)
+  );
+
+  const getRoleIcon = () => {
+    switch (userRole) {
+      case 'super_admin':
+        return <Crown className="w-4 h-4" />;
+      case 'admin':
+        return <Shield className="w-4 h-4" />;
+      default:
+        return <Users className="w-4 h-4" />;
+    }
+  };
+
+  const getRoleBadgeVariant = () => {
+    switch (userRole) {
+      case 'super_admin':
+        return 'destructive';
+      case 'admin':
+        return 'default';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const SidebarContent = () => (
+    <Card className="h-full border-r rounded-none">
+      <CardContent className="p-0 h-full flex flex-col">
+        <div className="p-6 border-b">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-lg">
+              <MessageSquare className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg">WhatsApp Marketing</h2>
+              <div className="flex items-center gap-2">
+                {getRoleIcon()}
+                <Badge variant={getRoleBadgeVariant()} className="text-xs">
+                  {userRole?.replace('_', ' ').toUpperCase()}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
+          {filteredMenuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.id}
+                variant={activeSection === item.id ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  onSectionChange(item.id);
+                  setIsOpen(false);
+                }}
+              >
+                <Icon className="w-4 h-4 mr-3" />
+                {item.label}
+              </Button>
+            );
+          })}
+        </nav>
+
+        <div className="p-4 border-t">
+          <Separator className="mb-4" />
+          <LogoutButton />
+        </div>
+      </CardContent>
+    </Card>
   );
 
   return (
@@ -76,99 +175,26 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
       <Button
         variant="ghost"
         size="sm"
-        className="fixed top-4 left-4 z-50 lg:hidden"
-        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </Button>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block w-64 h-screen sticky top-0">
+        <SidebarContent />
+      </div>
 
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:relative top-0 left-0 z-40 h-full bg-sidebar border-r border-sidebar-border
-        transition-all duration-300 ease-in-out
-        ${collapsed ? 'w-16' : 'w-64'}
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        <div className="flex flex-col h-full">
-          {/* Logo/Header */}
-          <div className="p-4 border-b border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold">
-                A
-              </div>
-              {!collapsed && (
-                <div>
-                  <h1 className="font-bold text-lg text-gradient">AyuChat</h1>
-                  <p className="text-xs text-muted-foreground">WhatsApp API Platform</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
-            {menuItems.map((item) => (
-              <MenuItem key={item.id} item={item} />
-            ))}
-          </nav>
-
-          {/* User section */}
-          <div className="p-4 border-t border-sidebar-border">
-            {!collapsed && (
-              <div className="mb-3 p-3 bg-sidebar-accent rounded-lg">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    JD
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">John Doe</p>
-                    <p className="text-xs text-muted-foreground truncate">john@company.com</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Plan: Pro</span>
-                  <Badge variant="secondary" className="text-xs">Active</Badge>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-1">
-              <Button variant="ghost" size="sm" className="w-full justify-start gap-3">
-                <Bell className="w-4 h-4" />
-                {!collapsed && 'Notifications'}
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start gap-3">
-                <User className="w-4 h-4" />
-                {!collapsed && 'Profile'}
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start gap-3 text-destructive">
-                <LogOut className="w-4 h-4" />
-                {!collapsed && 'Sign Out'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Collapse toggle */}
-          <div className="hidden lg:block p-2 border-t border-sidebar-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCollapsed(!collapsed)}
-              className="w-full"
-            >
-              <Menu className="w-4 h-4" />
-            </Button>
+      {/* Mobile sidebar */}
+      {isOpen && (
+        <div className="lg:hidden fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsOpen(false)} />
+          <div className="absolute left-0 top-0 h-full w-64 bg-background">
+            <SidebarContent />
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
