@@ -445,53 +445,17 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_user_role: {
-        Args: { _user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
       update_daily_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "user"
       automation_status: "active" | "paused" | "draft"
       automation_type: "chatbot" | "workflow"
       campaign_status: "draft" | "scheduled" | "active" | "completed" | "paused"
@@ -617,7 +581,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "user"],
       automation_status: ["active", "paused", "draft"],
       automation_type: ["chatbot", "workflow"],
       campaign_status: ["draft", "scheduled", "active", "completed", "paused"],

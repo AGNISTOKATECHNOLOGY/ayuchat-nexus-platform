@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { MessageSquare, Loader2, Shield, Users } from 'lucide-react';
+import { MessageSquare, Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const { user, signIn, signUp, loading } = useAuth();
@@ -16,7 +15,6 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [loginType, setLoginType] = useState('user');
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already authenticated
@@ -76,29 +74,6 @@ const Auth = () => {
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="loginType">Login as</Label>
-                    <Select value={loginType} onValueChange={setLoginType}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            Regular User
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="admin">
-                          <div className="flex items-center gap-2">
-                            <Shield className="w-4 h-4" />
-                            Admin Panel
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
@@ -127,7 +102,7 @@ const Auth = () => {
                         Signing In...
                       </>
                     ) : (
-                      `Sign In as ${loginType === 'admin' ? 'Admin' : 'User'}`
+                      'Sign In'
                     )}
                   </Button>
                 </form>
